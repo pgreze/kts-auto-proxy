@@ -24,6 +24,10 @@ inputs:
       'List of repositories with their proxies, separated by " -> " separator.'
     required: false
 
+outputs:
+  output_path:
+    description: 'Path to the output file.'
+
 runs:
   using: node20
   main: dist/index.js
