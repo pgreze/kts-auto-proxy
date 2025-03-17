@@ -61,7 +61,6 @@ const mavenCentralRepoUrls = [
 ]
 
 function parseFileRepositoryLine(line) {
-  // Implement the parsing getting '@file:Repository("(.*)")(.*)'
   const match = line.match(/@file:Repository\("(.*)"\)(.*)/)
   if (!match) {
     return null
@@ -73,12 +72,8 @@ function parseFileRepositoryLine(line) {
 }
 
 function isUrlMavenCentral(parsedLine) {
-  const url = parsedLine.url.match(/^(http|https):\/\/(.*)\/?/)
-  if (!url) {
-    core.error(`Invalid url: ${parsedLine.url}`)
-    return false
-  }
-  return mavenCentralRepoUrls.includes(url[2])
+  const url = parsedLine.url.match(/^(http|https):\/(\/)+(.*)/)
+  return url && mavenCentralRepoUrls.includes(trimEnd(url[3], '/'))
 }
 
 function isSameRepositoryUrl(url1, url2) {

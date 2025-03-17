@@ -42,6 +42,7 @@ describe('utils.js', () => {
 
     it('returns an empty map if input is empty', () => {
       const result = parseReposToProxies('')
+
       expect(result).toStrictEqual(new Map())
     })
 

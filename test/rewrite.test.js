@@ -5,6 +5,7 @@ describe('rewriteRepositories', () => {
   it('replaces maven central repository with proxy', () => {
     const lines = [
       '@file:Repository("https://repo.maven.apache.org/maven2")',
+      '@file:Repository("https://repo.maven.apache.org/maven2/")',
       '@file:DependsOn("some-dependency")'
     ]
     const mavenCentralProxy = 'https://central.proxy.org/maven2'
@@ -13,6 +14,7 @@ describe('rewriteRepositories', () => {
     const result = rewriteRepositories(lines, mavenCentralProxy, reposToProxies)
 
     expect(result).toStrictEqual([
+      '@file:Repository("https://central.proxy.org/maven2")',
       '@file:Repository("https://central.proxy.org/maven2")',
       '@file:DependsOn("some-dependency")'
     ])
