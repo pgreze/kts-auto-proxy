@@ -1,6 +1,6 @@
 # kts-auto-proxy
 
-This action automatically replace the repositories listed in a kotlin script
+This action automatically replaces the repositories listed in a kotlin script
 file with their equivalent proxies specified in the repos_to_proxies argument.
 
 This is helpful for example if you're reaching the rate limit of a repository,
@@ -28,7 +28,7 @@ jobs:
           EOF
 
       - name: Replace repositories with proxies
-        uses: kts-auto-proxy
+        uses: pgreze/kts-auto-proxy@v1
         with:
           input_path: 'script.main.kts'
           output_path: 'proxied-script.main.kts'
