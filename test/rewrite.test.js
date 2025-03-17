@@ -13,8 +13,8 @@ describe('rewriteRepositories', () => {
     const result = rewriteRepositories(lines, mavenCentralProxy, reposToProxies)
 
     expect(result).toBe(
-    '@file:Repository("https://central.proxy.org/maven2")\n' +
-    '@file:DependsOn("some-dependency")'
+      '@file:Repository("https://central.proxy.org/maven2")\n' +
+        '@file:DependsOn("some-dependency")'
     )
   })
 
@@ -30,22 +30,24 @@ describe('rewriteRepositories', () => {
 
     const result = rewriteRepositories(lines, mavenCentralProxy, reposToProxies)
 
-    expect(result).not.toContain('@file:Repository("https://repo.example.org/maven/")')
-    expect(result).toContain('@file:Repository("https://repo.proxy.org/maven/")')
+    expect(result).not.toContain(
+      '@file:Repository("https://repo.example.org/maven/")'
+    )
+    expect(result).toContain(
+      '@file:Repository("https://repo.proxy.org/maven/")'
+    )
   })
 
   it('adds maven central repository if not found', () => {
-    const lines = [
-      '@file:DependsOn("some-dependency")'
-    ]
+    const lines = ['@file:DependsOn("some-dependency")']
     const mavenCentralProxy = 'https://proxy.maven.org/maven2'
     const reposToProxies = new Map()
 
     const result = rewriteRepositories(lines, mavenCentralProxy, reposToProxies)
 
     expect(result).toBe(
-        '@file:Repository("https://proxy.maven.org/maven2")\n' +
+      '@file:Repository("https://proxy.maven.org/maven2")\n' +
         '@file:DependsOn("some-dependency")'
-      )
+    )
   })
 })

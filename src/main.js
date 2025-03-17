@@ -14,11 +14,16 @@ export async function run() {
 
     const mavenCentralProxy = core.getInput('maven_central_proxy')
 
-    const reposToProxies = parseReposToProxies(core.getInput('repos_to_proxies'))
+    const reposToProxies = parseReposToProxies(
+      core.getInput('repos_to_proxies')
+    )
 
     const lines = fs.readFileSync(inputPath, 'utf8').split('\n')
 
-    fs.writeFileSync(outputPath, rewriteRepositories(lines, mavenCentralProxy, reposToProxies))
+    fs.writeFileSync(
+      outputPath,
+      rewriteRepositories(lines, mavenCentralProxy, reposToProxies)
+    )
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

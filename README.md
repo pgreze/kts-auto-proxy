@@ -1,11 +1,11 @@
 # kts-auto-proxy
 
-This action automatically replace the repositories listed in a kotlin script file
-with their equivalent proxies specified in the repos_to_proxies argument.
+This action automatically replace the repositories listed in a kotlin script
+file with their equivalent proxies specified in the repos_to_proxies argument.
 
 This is helpful for example if you're reaching the rate limit of a repository,
-or if you want to ensure that the repository content is always available
-and/or for security reasons (like supply chain attacks).
+or if you want to ensure that the repository content is always available and/or
+for security reasons (like supply chain attacks).
 
 ## Usage
 

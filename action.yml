@@ -1,8 +1,8 @@
 name: kts-auto-proxy
 
-description: :-
-  GitHub Action for kotlin scripts replacing public repositories
-  specified with @file:Repository annotations with their equivalent proxies.
+description: |-
+  GitHub Action for kotlin scripts replacing public repositories specified
+  with @file:Repository annotations with their equivalent proxies.
 
 author: pgreze
 
@@ -11,13 +11,17 @@ inputs:
     description: 'Path to the kotlin script file.'
     required: true
   output_path:
-    description: 'Specify the output path. Keep empty to overwrite the input file.'
+    description:
+      'Specify the output path. Keep empty to overwrite the input file.'
     required: false
   maven_central_proxy:
-    description: 'URL of the maven central proxy. This is always specified in order to overwrite the default one.'
+    description:
+      'URL of the maven central proxy. This is always specified in order to
+      overwrite the default one.'
     required: true
   repos_to_proxies:
-    description: 'List of repositories with their proxies, separated by " -> " separator.'
+    description:
+      'List of repositories with their proxies, separated by " -> " separator.'
     required: false
 
 runs:
