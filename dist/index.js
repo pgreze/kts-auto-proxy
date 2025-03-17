@@ -27247,6 +27247,33 @@ function requireCore () {
 
 var coreExports = requireCore();
 
+function trimEnd(str, chars) {
+  let end = str.length;
+  while (chars.includes(str[end - 1])) {
+    end--;
+  }
+  return str.slice(0, end)
+}
+
+function parseReposToProxies(reposToProxies) {
+  const result = new Map();
+
+  if (!reposToProxies) {
+    return result
+  }
+
+  for (const line of reposToProxies.split('\n')) {
+    const parts = line.split(' -> ');
+    if (parts.length === 2) {
+      result.set(parts[0].trim(), parts[1].trim());
+    } else {
+      coreExports.warning(`Invalid repos_to_proxies line: ${line}`);
+    }
+  }
+
+  return result
+}
+
 function rewriteRepositories(lines, mavenCentralProxy, reposToProxies) {
   let mavenCentralRepositoryFound = false;
 
@@ -27263,9 +27290,13 @@ function rewriteRepositories(lines, mavenCentralProxy, reposToProxies) {
       lines[i] =
         `@file:Repository("${mavenCentralProxy}")${repositoryLine.rest}`;
       continue
+    } else if (isSameRepositoryUrl(repositoryLine.url, mavenCentralProxy)) {
+      coreExports.debug(`Maven central repository already proxied`);
+      mavenCentralRepositoryFound = true;
+      continue
     }
 
-    const proxyUrl = reposToProxies.get(repositoryLine.url);
+    const proxyUrl = proxyForRepositoryUrl(repositoryLine.url, reposToProxies);
     if (proxyUrl) {
       coreExports.debug(`Replace ${repositoryLine.url} by ${proxyUrl}`);
       lines[i] = `@file:Repository("${proxyUrl}")${repositoryLine.rest}`;
@@ -27294,7 +27325,7 @@ function rewriteRepositories(lines, mavenCentralProxy, reposToProxies) {
     }
   }
 
-  return lines.join('\n')
+  return lines
 }
 
 const mavenCentralRepoUrls = [
@@ -27323,6 +27354,19 @@ function isUrlMavenCentral(parsedLine) {
   return mavenCentralRepoUrls.includes(url[2])
 }
 
+function isSameRepositoryUrl(url1, url2) {
+  return trimEnd(url1, '/') === trimEnd(url2, '/')
+}
+
+function proxyForRepositoryUrl(url, reposToProxies) {
+  for (const [repo, proxy] of reposToProxies.entries()) {
+    if (isSameRepositoryUrl(url, repo)) {
+      return proxy
+    }
+  }
+  return null
+}
+
 async function run() {
   try {
     const inputPath = coreExports.getInput('input_path');
@@ -27343,31 +27387,12 @@ async function run() {
 
     require$$1.writeFileSync(
       outputPath,
-      rewriteRepositories(lines, mavenCentralProxy, reposToProxies)
+      rewriteRepositories(lines, mavenCentralProxy, reposToProxies).join('\n')
     );
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) coreExports.setFailed(error.message);
   }
-}
-
-function parseReposToProxies(reposToProxies) {
-  const result = new Map();
-
-  if (!reposToProxies) {
-    return result
-  }
-
-  for (const line of reposToProxies.split('\n')) {
-    const parts = line.split(' -> ');
-    if (parts.length === 2) {
-      result.set(parts[0].trim(), parts[1].trim());
-    } else {
-      coreExports.warning(`Invalid repos_to_proxies line: ${line}`);
-    }
-  }
-
-  return result
 }
 
 /**

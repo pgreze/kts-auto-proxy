@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import { trimEnd } from './utils'
 
 export function rewriteRepositories(lines, mavenCentralProxy, reposToProxies) {
   let mavenCentralRepositoryFound = false
@@ -16,9 +17,13 @@ export function rewriteRepositories(lines, mavenCentralProxy, reposToProxies) {
       lines[i] =
         `@file:Repository("${mavenCentralProxy}")${repositoryLine.rest}`
       continue
+    } else if (isSameRepositoryUrl(repositoryLine.url, mavenCentralProxy)) {
+      core.debug(`Maven central repository already proxied`)
+      mavenCentralRepositoryFound = true
+      continue
     }
 
-    const proxyUrl = reposToProxies.get(repositoryLine.url)
+    const proxyUrl = proxyForRepositoryUrl(repositoryLine.url, reposToProxies)
     if (proxyUrl) {
       core.debug(`Replace ${repositoryLine.url} by ${proxyUrl}`)
       lines[i] = `@file:Repository("${proxyUrl}")${repositoryLine.rest}`
@@ -47,7 +52,7 @@ export function rewriteRepositories(lines, mavenCentralProxy, reposToProxies) {
     }
   }
 
-  return lines.join('\n')
+  return lines
 }
 
 const mavenCentralRepoUrls = [
@@ -74,4 +79,17 @@ function isUrlMavenCentral(parsedLine) {
     return false
   }
   return mavenCentralRepoUrls.includes(url[2])
+}
+
+function isSameRepositoryUrl(url1, url2) {
+  return trimEnd(url1, '/') === trimEnd(url2, '/')
+}
+
+function proxyForRepositoryUrl(url, reposToProxies) {
+  for (const [repo, proxy] of reposToProxies.entries()) {
+    if (isSameRepositoryUrl(url, repo)) {
+      return proxy
+    }
+  }
+  return null
 }

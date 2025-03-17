@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { rewriteRepositories } from './rewrite'
+import { parseReposToProxies } from './utils'
 import * as fs from 'fs'
 
 export async function run() {
@@ -22,29 +23,10 @@ export async function run() {
 
     fs.writeFileSync(
       outputPath,
-      rewriteRepositories(lines, mavenCentralProxy, reposToProxies)
+      rewriteRepositories(lines, mavenCentralProxy, reposToProxies).join('\n')
     )
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
   }
-}
-
-function parseReposToProxies(reposToProxies) {
-  const result = new Map()
-
-  if (!reposToProxies) {
-    return result
-  }
-
-  for (const line of reposToProxies.split('\n')) {
-    const parts = line.split(' -> ')
-    if (parts.length === 2) {
-      result.set(parts[0].trim(), parts[1].trim())
-    } else {
-      core.warning(`Invalid repos_to_proxies line: ${line}`)
-    }
-  }
-
-  return result
 }
