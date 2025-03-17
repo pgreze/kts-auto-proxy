@@ -16,7 +16,7 @@ inputs:
   maven_central_proxy:
     description: 'URL of the maven central proxy. This is always specified in order to overwrite the default one.'
     required: true
-  repos_with_proxies:
+  repos_to_proxies:
     description: 'List of repositories with their proxies, separated by " -> " separator.'
     required: false
 

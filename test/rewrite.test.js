@@ -8,9 +8,9 @@ describe('rewriteRepositories', () => {
       '@file:DependsOn("some-dependency")'
     ]
     const mavenCentralProxy = 'https://central.proxy.org/maven2'
-    const reposWithProxies = new Map()
+    const reposToProxies = new Map()
 
-    const result = rewriteRepositories(lines, mavenCentralProxy, reposWithProxies)
+    const result = rewriteRepositories(lines, mavenCentralProxy, reposToProxies)
 
     expect(result).toBe(
     '@file:Repository("https://central.proxy.org/maven2")\n' +
@@ -24,11 +24,11 @@ describe('rewriteRepositories', () => {
       '@file:DependsOn("some-dependency")'
     ]
     const mavenCentralProxy = 'https://central.proxy.org/maven2'
-    const reposWithProxies = new Map([
+    const reposToProxies = new Map([
       ['https://repo.example.org/maven/', 'https://repo.proxy.org/maven/']
     ])
 
-    const result = rewriteRepositories(lines, mavenCentralProxy, reposWithProxies)
+    const result = rewriteRepositories(lines, mavenCentralProxy, reposToProxies)
 
     expect(result).not.toContain('@file:Repository("https://repo.example.org/maven/")')
     expect(result).toContain('@file:Repository("https://repo.proxy.org/maven/")')
@@ -39,9 +39,9 @@ describe('rewriteRepositories', () => {
       '@file:DependsOn("some-dependency")'
     ]
     const mavenCentralProxy = 'https://proxy.maven.org/maven2'
-    const reposWithProxies = new Map()
+    const reposToProxies = new Map()
 
-    const result = rewriteRepositories(lines, mavenCentralProxy, reposWithProxies)
+    const result = rewriteRepositories(lines, mavenCentralProxy, reposToProxies)
 
     expect(result).toBe(
         '@file:Repository("https://proxy.maven.org/maven2")\n' +

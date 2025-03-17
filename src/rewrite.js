@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 
-export function rewriteRepositories(lines, mavenCentralProxy, reposWithProxies) {
+export function rewriteRepositories(lines, mavenCentralProxy, reposToProxies) {
     let mavenCentralRepositoryFound = false
 
     for (let i = 0; i < lines.length; i++) {
@@ -17,7 +17,7 @@ export function rewriteRepositories(lines, mavenCentralProxy, reposWithProxies) 
             continue
         }
     
-        const proxyUrl = reposWithProxies.get(repositoryLine.url)
+        const proxyUrl = reposToProxies.get(repositoryLine.url)
         if (proxyUrl) {
             core.debug(`Replace ${repositoryLine.url} by ${proxyUrl}`)
             lines[i] = `@file:Repository("${proxyUrl}")${repositoryLine.rest}`

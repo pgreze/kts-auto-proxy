@@ -14,30 +14,30 @@ export async function run() {
 
     const mavenCentralProxy = core.getInput('maven_central_proxy')
 
-    const reposWithProxies = parseReposWithProxies(core.getInput('repos_with_proxies'))
+    const reposToProxies = parseReposToProxies(core.getInput('repos_to_proxies'))
 
     const lines = fs.readFileSync(inputPath, 'utf8').split('\n')
 
-    fs.writeFileSync(outputPath, rewriteRepositories(lines, mavenCentralProxy, reposWithProxies))
+    fs.writeFileSync(outputPath, rewriteRepositories(lines, mavenCentralProxy, reposToProxies))
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
 
-function parseReposWithProxies(reposWithProxies) {
+function parseReposToProxies(reposToProxies) {
   const result = new Map()
 
-  if (!reposWithProxies) {
+  if (!reposToProxies) {
     return result
   }
 
-  for (const line of reposWithProxies.split('\n')) {
+  for (const line of reposToProxies.split('\n')) {
     const parts = line.split(' -> ')
     if (parts.length === 2) {
       result.set(parts[0].trim(), parts[1].trim())
     } else {
-      core.warning(`Invalid repos_with_proxies line: ${line}`)
+      core.warning(`Invalid repos_to_proxies line: ${line}`)
     }
   }
 

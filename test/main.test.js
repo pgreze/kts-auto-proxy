@@ -24,7 +24,7 @@ describe('main.js', () => {
           return ''
         case 'maven_central_proxy':
           return 'https://proxy.maven.org/maven2'
-        case 'repos_with_proxies':
+        case 'repos_to_proxies':
           return ''
         default:
           return ''
@@ -50,7 +50,7 @@ describe('main.js', () => {
           return 'output.txt'
         case 'maven_central_proxy':
           return 'https://proxy.maven.org/maven2'
-        case 'repos_with_proxies':
+        case 'repos_to_proxies':
           return ''
         default:
           return ''

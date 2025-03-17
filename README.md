@@ -1,7 +1,7 @@
 # kts-auto-proxy
 
 This action automatically replace the repositories listed in a kotlin script file
-with their equivalent proxies specified in the repos_with_proxies argument.
+with their equivalent proxies specified in the repos_to_proxies argument.
 
 This is helpful for example if you're reaching the rate limit of a repository,
 or if you want to ensure that the repository content is always available
@@ -13,7 +13,7 @@ and/or for security reasons (like supply chain attacks).
 name: Replace file:Repository with their equivalent proxies
 
 jobs:
-  replace_repos_with_proxies:
+  replace_repos_to_proxies:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -30,9 +30,10 @@ jobs:
       - name: Replace repositories with proxies
         uses: kts-auto-proxy
         with:
+          input_path: 'script.main.kts'
           output_path: 'proxied-script.main.kts'
           maven_central_proxy: 'https://maven.aliyun.com/repository'
-          repos_with_proxies: |
+          repos_to_proxies: |
             https://example1.org/maven/ -> https://proxied-repo.example2.com/maven/
             https://custom-maven.example3.org/ -> https://us-east4-maven.pkg.dev/gcp-project/repository-name
 
