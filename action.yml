@@ -1,23 +1,24 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: kts-auto-proxy
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
-branding:
-  icon: heart
-  color: red
+description: :-
+  GitHub Action for kotlin scripts replacing public repositories
+  specified with @file:Repository annotations with their equivalent proxies.
 
-# Define your inputs here.
+author: pgreze
+
 inputs:
-  milliseconds:
-    description: Your input description here
+  input_path:
+    description: 'Path to the kotlin script file.'
     required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: Your output description here
+  output_path:
+    description: 'Specify the output path. Keep empty to overwrite the input file.'
+    required: false
+  maven_central_proxy:
+    description: 'URL of the maven central proxy. This is always specified in order to overwrite the default one.'
+    required: true
+  repos_with_proxies:
+    description: 'List of repositories with their proxies, separated by " -> " separator.'
+    required: false
 
 runs:
   using: node20

@@ -1,8 +1,52 @@
 # kts-auto-proxy
 
-## Create Your Own Action
+This action automatically replace the repositories listed in a kotlin script file
+with their equivalent proxies specified in the repos_with_proxies argument.
 
-## Initial Setup
+This is helpful for example if you're reaching the rate limit of a repository,
+or if you want to ensure that the repository content is always available
+and/or for security reasons (like supply chain attacks).
+
+## Usage
+
+```yaml
+name: Replace file:Repository with their equivalent proxies
+
+jobs:
+  replace_repos_with_proxies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Create a kts file containing dumb repos
+        run: |
+          cat > script.main.kts <<EOF
+          @file:Repository("https://example1.org/maven/")
+          @file:Repository("https://custom-maven.example3.org/")
+          println("Hello, world!")
+          EOF
+
+      - name: Replace repositories with proxies
+        uses: kts-auto-proxy
+        with:
+          output_path: 'proxied-script.main.kts'
+          maven_central_proxy: 'https://maven.aliyun.com/repository'
+          repos_with_proxies: |
+            https://example1.org/maven/ -> https://proxied-repo.example2.com/maven/
+            https://custom-maven.example3.org/ -> https://us-east4-maven.pkg.dev/gcp-project/repository-name
+
+      - name: Check the content of the file
+        run: |
+          diff -u <(cat proxied-script.main.kts) - <<EOF
+          @file:Repository("https://maven.aliyun.com/repository")
+          @file:Repository("https://proxied-repo.example2.com/maven/")
+          @file:Repository("https://us-east4-maven.pkg.dev/gcp-project/repository-name")
+          println("Hello, world!")
+          EOF
+```
+
+## How to contribute
 
 You need to perform some initial setup steps before you can develop your action.
 
@@ -40,52 +84,6 @@ You need to perform some initial setup steps before you can develop your action.
    ...
    ```
 
-## Update the Action Metadata
-
-The [`action.yml`](action.yml) file defines metadata about your action, such as
-input(s) and output(s). For details about this file, see
-[Metadata syntax for GitHub Actions](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions).
-
-When you copy this repository, update `action.yml` with the name, description,
-inputs, and outputs for your action.
-
-## Update the Action Code
-
-The [`src/`](./src/) directory is the heart of your action! This contains the
-source code that will be run when your action is invoked. You can replace the
-contents of this directory with your own code.
-
-There are a few things to keep in mind when writing your action code:
-
-- Most GitHub Actions toolkit and CI/CD operations are processed asynchronously.
-  In `main.js`, you will see that the action is run in an `async` function.
-
-  ```javascript
-  const core = require('@actions/core')
-  //...
-
-  async function run() {
-    try {
-      //...
-    } catch (error) {
-      core.setFailed(error.message)
-    }
-  }
-  ```
-
-  For more information about the GitHub Actions toolkit, see the
-  [documentation](https://github.com/actions/toolkit/blob/main/README.md).
-
-So, what are you waiting for? Go ahead and start customizing your action!
-
-1. Create a new branch
-
-   ```bash
-   git checkout -b releases/v1
-   ```
-
-1. Replace the contents of `src/` with your action code
-1. Add tests to `__tests__/` for your source code
 1. Format, test, and build the action
 
    ```bash
@@ -141,69 +139,12 @@ So, what are you waiting for? Go ahead and start customizing your action!
    ```
 
 1. Create a pull request and get feedback on your action
-1. Merge the pull request into the `main` branch
-
-Your action is now published! :rocket:
 
 For information about versioning your action, see
 [Versioning](https://github.com/actions/toolkit/blob/main/docs/action-versioning.md)
 in the GitHub Actions toolkit.
 
-## Validate the Action
-
-You can now validate the action by referencing it in a workflow file. For
-example, [`ci.yml`](./.github/workflows/ci.yml) demonstrates how to reference an
-action in the same repository.
-
-```yaml
-steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v3
-
-  - name: Test Local Action
-    id: test-action
-    uses: ./
-    with:
-      milliseconds: 1000
-
-  - name: Print Output
-    id: output
-    run: echo "${{ steps.test-action.outputs.time }}"
-```
-
-For example workflow runs, check out the
-[Actions tab](https://github.com/actions/javascript-action/actions)! :rocket:
-
-## Usage
-
-After testing, you can create version tag(s) that developers can use to
-reference different stable versions of your action. For more information, see
-[Versioning](https://github.com/actions/toolkit/blob/main/docs/action-versioning.md)
-in the GitHub Actions toolkit.
-
-To include the action in a workflow in another repository, you can use the
-`uses` syntax with the `@` symbol to reference a specific branch, tag, or commit
-hash.
-
-```yaml
-steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v4
-
-  - name: Run my Action
-    id: run-action
-    uses: actions/javascript-action@v1 # Commit with the `v1` tag
-    with:
-      milliseconds: 1000
-
-  - name: Print Output
-    id: output
-    run: echo "${{ steps.run-action.outputs.time }}"
-```
-
-## Dependency License Management
+### Dependency License Management
 
 This template includes a GitHub Actions workflow,
 [`licensed.yml`](./.github/workflows/licensed.yml), that uses
@@ -230,7 +171,7 @@ changes pushed directly to `main`. If the workflow detects any dependencies with
 missing or non-compliant licenses, it will fail the workflow and provide details
 on the issue(s) found.
 
-### Updating Licenses
+#### Updating Licenses
 
 Whenever you install or update dependencies, you can use the Licensed CLI to
 update the licenses database. To install Licensed, see the project's
