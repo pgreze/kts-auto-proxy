@@ -24,6 +24,7 @@ jobs:
           cat > script.main.kts <<EOF
           @file:Repository("https://example1.org/maven/")
           @file:Repository("https://custom-maven.example3.org/")
+          @file:DependsOn("com.example:example:1.0.0")
           println("Hello, world!")
           EOF
 
@@ -40,12 +41,19 @@ jobs:
       - name: Check the content of the file
         run: |
           diff -u <(cat proxied-script.main.kts) - <<EOF
-          @file:Repository("https://maven.aliyun.com/repository")
           @file:Repository("https://proxied-repo.example2.com/maven/")
           @file:Repository("https://us-east4-maven.pkg.dev/gcp-project/repository-name")
+          @file:Repository("https://maven.aliyun.com/repository")
+          @file:DependsOn("com.example:example:1.0.0")
           println("Hello, world!")
           EOF
 ```
+
+Notice:
+
+- the maven central proxy is always added before the first `@file:DependsOn` if
+  not specified explicitely.
+- URLs with or without trailing slash are supported.
 
 ## How to contribute
 
