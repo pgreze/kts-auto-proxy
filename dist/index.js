@@ -1,6 +1,7 @@
 import require$$0 from 'os';
 import require$$0$1 from 'crypto';
-import require$$1 from 'fs';
+import * as require$$1 from 'fs';
+import require$$1__default from 'fs';
 import require$$1$5 from 'path';
 import require$$2 from 'http';
 import require$$3 from 'https';
@@ -222,7 +223,7 @@ function requireFileCommand () {
 	// We use any as a valid input type
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	const crypto = __importStar(require$$0$1);
-	const fs = __importStar(require$$1);
+	const fs = __importStar(require$$1__default);
 	const os = __importStar(require$$0);
 	const utils_1 = requireUtils$1();
 	function issueFileCommand(command, message) {
@@ -25200,7 +25201,7 @@ function requireSummary () {
 		Object.defineProperty(exports, "__esModule", { value: true });
 		exports.summary = exports.markdownSummary = exports.SUMMARY_DOCS_URL = exports.SUMMARY_ENV_VAR = void 0;
 		const os_1 = require$$0;
-		const fs_1 = require$$1;
+		const fs_1 = require$$1__default;
 		const { access, appendFile, writeFile } = fs_1.promises;
 		exports.SUMMARY_ENV_VAR = 'GITHUB_STEP_SUMMARY';
 		exports.SUMMARY_DOCS_URL = 'https://docs.github.com/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary';
@@ -25592,7 +25593,7 @@ function requireIoUtil () {
 		var _a;
 		Object.defineProperty(exports, "__esModule", { value: true });
 		exports.getCmdPath = exports.tryGetExecutablePath = exports.isRooted = exports.isDirectory = exports.exists = exports.READONLY = exports.UV_FS_O_EXLOCK = exports.IS_WINDOWS = exports.unlink = exports.symlink = exports.stat = exports.rmdir = exports.rm = exports.rename = exports.readlink = exports.readdir = exports.open = exports.mkdir = exports.lstat = exports.copyFile = exports.chmod = void 0;
-		const fs = __importStar(require$$1);
+		const fs = __importStar(require$$1__default);
 		const path = __importStar(require$$1$5);
 		_a = fs.promises
 		// export const {open} = 'fs'
@@ -27246,39 +27247,145 @@ function requireCore () {
 
 var coreExports = requireCore();
 
-/**
- * Waits for a number of milliseconds.
- *
- * @param {number} milliseconds The number of milliseconds to wait.
- * @returns {Promise<string>} Resolves with 'done!' after the wait is over.
- */
-async function wait(milliseconds) {
-  return new Promise((resolve) => {
-    if (isNaN(milliseconds)) throw new Error('milliseconds is not a number')
-
-    setTimeout(() => resolve('done!'), milliseconds);
-  })
+function trimEnd(str, chars) {
+  let end = str.length;
+  while (chars.includes(str[end - 1])) {
+    end--;
+  }
+  return str.slice(0, end)
 }
 
-/**
- * The main function for the action.
- *
- * @returns {Promise<void>} Resolves when the action is complete.
- */
+function parseReposToProxies(reposToProxies) {
+  const result = new Map();
+
+  if (!reposToProxies) {
+    return result
+  }
+
+  for (const line of reposToProxies.split('\n')) {
+    const parts = line.split(' -> ');
+    if (parts.length === 2) {
+      result.set(parts[0].trim(), parts[1].trim());
+    } else {
+      coreExports.warning(`Invalid repos_to_proxies line: ${line}`);
+    }
+  }
+
+  return result
+}
+
+function rewriteRepositories(lines, mavenCentralProxy, reposToProxies) {
+  let mavenCentralRepositoryFound = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const repositoryLine = parseFileRepositoryLine(line);
+    if (!repositoryLine) {
+      continue
+    }
+
+    if (isUrlMavenCentral(repositoryLine)) {
+      coreExports.debug(`Replace ${repositoryLine.url} by ${mavenCentralProxy}`);
+      mavenCentralRepositoryFound = true;
+      lines[i] =
+        `@file:Repository("${mavenCentralProxy}")${repositoryLine.rest}`;
+      continue
+    } else if (isSameRepositoryUrl(repositoryLine.url, mavenCentralProxy)) {
+      coreExports.debug(`Maven central repository already proxied`);
+      mavenCentralRepositoryFound = true;
+      continue
+    }
+
+    const proxyUrl = proxyForRepositoryUrl(repositoryLine.url, reposToProxies);
+    if (proxyUrl) {
+      coreExports.debug(`Replace ${repositoryLine.url} by ${proxyUrl}`);
+      lines[i] = `@file:Repository("${proxyUrl}")${repositoryLine.rest}`;
+      continue
+    }
+
+    coreExports.debug(`No proxy found for ${repositoryLine.url}`);
+  }
+
+  // Add maven central repository before the first file:DependsOn if not found
+  if (!mavenCentralRepositoryFound) {
+    const firstDependsOnIndex = lines.findIndex((line) =>
+      line.includes('@file:DependsOn')
+    );
+    if (firstDependsOnIndex === -1) {
+      coreExports.debug(
+        'No @file:DependsOn found, maven central repository will not be added'
+      );
+    } else {
+      coreExports.debug(`Add maven central repository before @file:DependsOn`);
+      lines.splice(
+        firstDependsOnIndex,
+        0,
+        `@file:Repository("${mavenCentralProxy}")`
+      );
+    }
+  }
+
+  return lines
+}
+
+const mavenCentralRepoUrls = [
+  'repo.maven.apache.org/maven2',
+  'repo1.maven.org/maven2'
+];
+
+function parseFileRepositoryLine(line) {
+  const match = line.match(/@file:Repository\("(.*)"\)(.*)/);
+  if (!match) {
+    return null
+  }
+  return {
+    url: match[1],
+    rest: match[2]
+  }
+}
+
+function isUrlMavenCentral(parsedLine) {
+  const url = parsedLine.url.match(/^(http|https):\/(\/)+(.*)/);
+  return url && mavenCentralRepoUrls.includes(trimEnd(url[3], '/'))
+}
+
+function isSameRepositoryUrl(url1, url2) {
+  return trimEnd(url1, '/') === trimEnd(url2, '/')
+}
+
+function proxyForRepositoryUrl(url, reposToProxies) {
+  for (const [repo, proxy] of reposToProxies.entries()) {
+    if (isSameRepositoryUrl(url, repo)) {
+      return proxy
+    }
+  }
+  return null
+}
+
 async function run() {
   try {
-    const ms = coreExports.getInput('milliseconds');
+    const inputPath = coreExports.getInput('input_path');
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    coreExports.debug(`Waiting ${ms} milliseconds ...`);
+    let outputPath = coreExports.getInput('output_path');
+    if (!outputPath) {
+      coreExports.debug('Output path not provided, overwriting input file');
+      outputPath = inputPath;
+    }
 
-    // Log the current timestamp, wait, then log the new timestamp
-    coreExports.debug(new Date().toTimeString());
-    await wait(parseInt(ms, 10));
-    coreExports.debug(new Date().toTimeString());
+    const mavenCentralProxy = coreExports.getInput('maven_central_proxy');
 
-    // Set outputs for other workflow steps to use
-    coreExports.setOutput('time', new Date().toTimeString());
+    const reposToProxies = parseReposToProxies(
+      coreExports.getInput('repos_to_proxies')
+    );
+
+    const lines = require$$1.readFileSync(inputPath, 'utf8').split('\n');
+
+    require$$1.writeFileSync(
+      outputPath,
+      rewriteRepositories(lines, mavenCentralProxy, reposToProxies).join('\n')
+    );
+
+    coreExports.setOutput('output_path', outputPath);
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) coreExports.setFailed(error.message);
