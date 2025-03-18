@@ -1,8 +1,7 @@
 name: kts-auto-proxy
 
 description: |-
-  GitHub Action for kotlin scripts replacing public repositories specified
-  with @file:Repository annotations with their equivalent proxies.
+  GitHub Action for Kotlin scripts that replaces @file:Repository annotated repositories with their proxy equivalents.
 
 author: pgreze
 
